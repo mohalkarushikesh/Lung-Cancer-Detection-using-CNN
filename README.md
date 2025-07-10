@@ -55,7 +55,7 @@ Input → MobileNetV2 (frozen) → GlobalAveragePooling → Dense(128)
 - Callbacks:
   - `EarlyStopping`: Stops training if validation accuracy plateaus
   - `ReduceLROnPlateau`: Dynamically adjusts learning rate
-  - Custom callback for 85% validation accuracy threshold
+  - Custom callback for 90% validation accuracy threshold
 
 ---
 
