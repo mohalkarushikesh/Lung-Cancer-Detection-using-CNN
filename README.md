@@ -1,98 +1,123 @@
-# 🫁 Lung Cancer Detection using CNN
+# 🫁 Lung & Colon Cancer Detection using CNN and Transfer Learning
 
-## 🧾 Description
-A deep learning model using **Convolutional Neural Networks (CNN)** is developed to classify medical images into cancerous and non-cancerous categories. The model processes visual patterns found in histopathological scans or CT images to assist in faster and more reliable diagnosis of lung cancer.
+## 🧾 Project Overview
+This project uses **Convolutional Neural Networks (CNN)** and **Transfer Learning (MobileNetV2)** to detect and classify medical images into cancerous and non-cancerous categories, specifically for lung and colon histopathological tissues. It also incorporates fine-tuning, data augmentation, model evaluation, and Grad-CAM-based explainability.
 
 ---
 
-## 📁 Project Workflow
+## 📁 Workflow Summary
 
-### 1. 📦 Data Acquisition
-- Utilizes [Kaggle dataset](https://www.kaggle.com/datasets/andrewmvd/lung-and-colon-cancer-histopathological-images) containing labeled `.jpeg` images of lung and colon tissues.
-- Includes categories:
+### 1. 📦 Dataset
+- Source: [Kaggle](https://www.kaggle.com/datasets/andrewmvd/lung-and-colon-cancer-histopathological-images)
+- Format: JPEG histopathological images
+- Categories:
   - `lung_aca` – Lung Adenocarcinoma
   - `lung_scc` – Lung Squamous Cell Carcinoma
   - `lung_n` – Normal Lung Tissue
-  - *(Optionally includes colon tissue classes)*
+  - `colon_aca` – Colon Adenocarcinoma
+  - `colon_n` – Normal Colon Tissue
 
-### 2. 📚 Importing Libraries
-- Essential packages: `NumPy`, `Pandas`, `Matplotlib`, `OpenCV`, `TensorFlow`, `Keras`, `scikit-learn`
-- Preprocessing: image resizing, class detection, and dataset balancing
+---
+
+### 2. 🧰 Environment & Libraries
+- Tools: `NumPy`, `Pandas`, `Matplotlib`, `Seaborn`, `OpenCV`, `TensorFlow`, `Keras`, `scikit-learn`
+- Image handling: Resizing, normalization, one-hot encoding, and splitting (`train/val`)
+
+---
 
 ### 3. 🖼️ Data Visualization
-- Displays random sample images per class to confirm distribution and image quality
-- Summarizes image count across each class
-
-### 4. 🧼 Image Preprocessing
-- Resizes images to uniform dimensions (`128x128`)
-- Normalizes pixel values
-- One-hot encodes class labels
-- Splits dataset into training and validation sets (`80/20`)
+- Random sample display for each class
+- Class-wise image count summary
+- Path validation checks for dataset integrity
 
 ---
 
-## 🧠 Model Development
+### 4. 🧪 Preprocessing
+- Resize to `128×128`
+- One-hot label encoding
+- Data split: `80/20` (Train/Val)
+- ~200 images loaded per class
+  - Total dataset size: ~1000 images
 
-### 🛠️ Architecture Overview
+---
 
-#### ✅ Option 1: Custom CNN
+### 5. 🧠 Model Architecture
+
+#### Option 1: Custom CNN
 ```text
-Input → [Conv2D → ReLU → MaxPooling] ×3 → Flatten → Dense(256)
-→ BatchNorm → Dense(128) → Dropout(0.3) → Output (Softmax)
+Conv2D ×3 → MaxPooling → Flatten → Dense(256) → BatchNorm
+→ Dense(128) → Dropout → Output(Softmax)
 ```
 
-#### ✅ Option 2: Transfer Learning (MobileNetV2)
+#### Option 2: Transfer Learning (MobileNetV2)
 ```text
-Input → MobileNetV2 (frozen) → GlobalAveragePooling → Dense(128)
-→ Dropout(0.3) → BatchNorm → Output (Softmax)
+MobileNetV2 (pretrained) → GlobalAvgPooling → Dense(128)
+→ Dropout → BatchNorm → Output(Softmax)
 ```
 
-### 🔁 Training Setup
+---
+
+### 6. 🔁 Training Strategy
 - Optimizer: `Adam`
-- Loss Function: `Categorical Crossentropy`
-- Batch Size: `32`
+- Loss: `CategoricalCrossentropy`
 - Epochs: `10`
+- Batch Size: `32`
 - Callbacks:
-  - `EarlyStopping`: Stops training if validation accuracy plateaus
-  - `ReduceLROnPlateau`: Dynamically adjusts learning rate
-  - Custom callback for 90% validation accuracy threshold
+  - `EarlyStopping` (patience=3, restore best weights)
+  - `ReduceLROnPlateau` (patience=2, factor=0.5)
+  - Custom Callback: Stops training if `val_accuracy > 85%`
 
 ---
 
-## 🧪 Model Evaluation
-
-### 📈 Performance Metrics
-- **Accuracy and Loss curves** plotted across training epochs
-- **Classification Report** with:
-  - Precision
-  - Recall
-  - F1-score
-
-### 🔍 Confusion Matrix
-- Visual analysis of model predictions vs. actual labels
-- Helps identify misclassified classes
+### 7. 🎛️ Fine-Tuning MobileNetV2
+- Unfreeze last 10% of layers
+- Freeze initial 90% to retain learned features
+- Retrain with data augmentation
+- Augmentations used:
+  - Rotation, shift, shear, zoom, horizontal flip
+  - Fill mode: `nearest`
 
 ---
 
-## 💾 Saving & Reloading Model
+## 📊 Evaluation & Visuals
 
+### 📈 Training Performance
+- Accuracy and loss graphs (`train/val`)
+
+### 🧾 Classification Report
+- Precision, Recall, F1-score via `sklearn.metrics`
+
+### 🧮 Confusion Matrix
+- Visualized with `seaborn.heatmap`
+
+---
+
+## 🔬 Explainability with Grad-CAM
+- Highlights image regions contributing to predictions
+- Overlay heatmaps on validation samples
+- Visualized with `matplotlib` side-by-side
+- Helps interpret model confidence for each prediction
+
+---
+
+## 💾 Save & Load Model
 ```python
-# Save trained model
-model.save("lung_colon_classifier.h5")
-
-# Load model later
-model = keras.models.load_model("lung_colon_classifier.h5")
+model.save("fine_tuned_lung_colon_classifier.h5")
+# Load later:
+model = keras.models.load_model("fine_tuned_lung_colon_classifier.h5")
 ```
 
 ---
 
-## 🚀 Future Improvements
-- Enable fine-tuning of pretrained layers
-- Apply data augmentation techniques (`ImageDataGenerator`)
-- Incorporate Grad-CAM for visualizing model attention
-- Deploy model with `TensorFlow Lite` or convert to `ONNX`
+## 🚀 Future Enhancements
+- Export to mobile-friendly formats (`TFLite`, `ONNX`)
+- Improve class balance and boost generalization
+- Use full dataset or expand training set
+- Build interactive dashboard or web interface
+- Schedule experiments with more advanced callbacks
 
 ---
 
-## 📜 License
-This project is intended for educational and research use. The dataset is provided by Kaggle contributors under its license terms.
+## 📜 License & Acknowledgments
+- Educational and research purposes only
+- Dataset credited to original [Kaggle contributors](https://www.kaggle.com/datasets/andrewmvd/lung-and-colon-cancer-histopathological-images)
