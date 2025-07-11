@@ -1,123 +1,111 @@
-# 🫁 Lung & Colon Cancer Detection using CNN and Transfer Learning
+# 🧬 Lung & Colon Histopathology Image Classifier
 
-## 🧾 Project Overview
-This project uses **Convolutional Neural Networks (CNN)** and **Transfer Learning (MobileNetV2)** to detect and classify medical images into cancerous and non-cancerous categories, specifically for lung and colon histopathological tissues. It also incorporates fine-tuning, data augmentation, model evaluation, and Grad-CAM-based explainability.
-
----
-
-## 📁 Workflow Summary
-
-### 1. 📦 Dataset
-- Source: [Kaggle](https://www.kaggle.com/datasets/andrewmvd/lung-and-colon-cancer-histopathological-images)
-- Format: JPEG histopathological images
-- Categories:
-  - `lung_aca` – Lung Adenocarcinoma
-  - `lung_scc` – Lung Squamous Cell Carcinoma
-  - `lung_n` – Normal Lung Tissue
-  - `colon_aca` – Colon Adenocarcinoma
-  - `colon_n` – Normal Colon Tissue
+This project builds a convolutional neural network using transfer learning (MobileNetV2) to classify lung and colon tissue histopathology images. It leverages pre-trained models, extensive data preprocessing, and visualization tools to achieve high accuracy in identifying cancerous tissue types.
 
 ---
 
-### 2. 🧰 Environment & Libraries
-- Tools: `NumPy`, `Pandas`, `Matplotlib`, `Seaborn`, `OpenCV`, `TensorFlow`, `Keras`, `scikit-learn`
-- Image handling: Resizing, normalization, one-hot encoding, and splitting (`train/val`)
+## 📁 Dataset Overview
+
+- **Source**: `./lung_colon_image_set/`
+- **Structure**:
+  ```
+  lung_colon_image_set/
+    ├── lung_image_sets/
+    │     ├── lung_aca
+    │     ├── lung_n
+    │     └── lung_scc
+    ├── colon_image_sets/
+          ├── colon_aca
+          └── colon_n
+  ```
+- **Classes Detected**:  
+  - `lung_aca` (Lung Adenocarcinoma)  
+  - `lung_n` (Normal Lung)  
+  - `lung_scc` (Lung Squamous Cell Carcinoma)  
+  - `colon_aca` (Colon Adenocarcinoma)  
+  - `colon_n` (Normal Colon)
 
 ---
 
-### 3. 🖼️ Data Visualization
-- Random sample display for each class
-- Class-wise image count summary
-- Path validation checks for dataset integrity
+## 🛠️ Project Pipeline
 
----
+### 1. **Data Preparation**
+- Loads `.jpeg` images from respective class folders
+- Resizes to `128x128` using OpenCV
+- Labels are one-hot encoded for multi-class classification
+- Splits dataset into training and validation using `train_test_split`
 
-### 4. 🧪 Preprocessing
-- Resize to `128×128`
-- One-hot label encoding
-- Data split: `80/20` (Train/Val)
-- ~200 images loaded per class
-  - Total dataset size: ~1000 images
+### 2. **Model Architecture**
+- Uses MobileNetV2 (pre-trained on ImageNet) as a base model
+- Custom top layers include:
+  - GlobalAveragePooling
+  - Dense + Dropout + BatchNormalization
+  - Final softmax classification layer
+- Freezes base layers initially for transfer learning
 
----
-
-### 5. 🧠 Model Architecture
-
-#### Option 1: Custom CNN
-```text
-Conv2D ×3 → MaxPooling → Flatten → Dense(256) → BatchNorm
-→ Dense(128) → Dropout → Output(Softmax)
-```
-
-#### Option 2: Transfer Learning (MobileNetV2)
-```text
-MobileNetV2 (pretrained) → GlobalAvgPooling → Dense(128)
-→ Dropout → BatchNorm → Output(Softmax)
-```
-
----
-
-### 6. 🔁 Training Strategy
-- Optimizer: `Adam`
-- Loss: `CategoricalCrossentropy`
-- Epochs: `10`
-- Batch Size: `32`
+### 3. **Training Strategy**
+- Loss: `categorical_crossentropy`
+- Optimizer: `adam`
+- Metrics: `accuracy`
 - Callbacks:
-  - `EarlyStopping` (patience=3, restore best weights)
-  - `ReduceLROnPlateau` (patience=2, factor=0.5)
-  - Custom Callback: Stops training if `val_accuracy > 85%`
+  - EarlyStopping (monitoring val_accuracy)
+  - ReduceLROnPlateau (monitoring val_loss)
+  - Custom callback to stop training at 90% validation accuracy
+
+### 4. **Evaluation**
+- Uses `sklearn.metrics.classification_report` and `confusion_matrix`
+- Generates plots for training accuracy and loss over epochs
 
 ---
 
-### 7. 🎛️ Fine-Tuning MobileNetV2
-- Unfreeze last 10% of layers
-- Freeze initial 90% to retain learned features
-- Retrain with data augmentation
-- Augmentations used:
-  - Rotation, shift, shear, zoom, horizontal flip
-  - Fill mode: `nearest`
+## 📊 Performance Visualization
+
+- Training/Validation Accuracy and Loss curves are plotted using `matplotlib`
+- Sample images are displayed per class for visual inspection
+- Classification metrics like precision, recall, and F1-score reported
 
 ---
 
-## 📊 Evaluation & Visuals
+## 📦 Output
 
-### 📈 Training Performance
-- Accuracy and loss graphs (`train/val`)
-
-### 🧾 Classification Report
-- Precision, Recall, F1-score via `sklearn.metrics`
-
-### 🧮 Confusion Matrix
-- Visualized with `seaborn.heatmap`
-
----
-
-## 🔬 Explainability with Grad-CAM
-- Highlights image regions contributing to predictions
-- Overlay heatmaps on validation samples
-- Visualized with `matplotlib` side-by-side
-- Helps interpret model confidence for each prediction
-
----
-
-## 💾 Save & Load Model
-```python
-model.save("fine_tuned_lung_colon_classifier.h5")
-# Load later:
-model = keras.models.load_model("fine_tuned_lung_colon_classifier.h5")
-```
+- Final trained model saved as:  
+  ```
+  lung_colon_classifier.h5
+  ```
 
 ---
 
 ## 🚀 Future Enhancements
-- Export to mobile-friendly formats (`TFLite`, `ONNX`)
-- Improve class balance and boost generalization
-- Use full dataset or expand training set
-- Build interactive dashboard or web interface
-- Schedule experiments with more advanced callbacks
+
+| Feature                                   | Description                                                                 |
+|------------------------------------------|-----------------------------------------------------------------------------|
+| 🔍 Grad-CAM Integration                  | Visualize class-specific activation maps to explain model decisions         |
+| 🔄 Fine-Tuning Base Model                | Unfreeze deeper layers in MobileNetV2 for refined feature learning          |
+| 📈 Class Imbalance Handling              | Apply `class_weight` or data resampling to balance minority classes         |
+| 🧪 Test Set Evaluation                   | Add separate test split for unbiased performance validation                 |
+| 📁 Image Logging                         | Save misclassified images for manual review and dataset improvement         |
+| ⚙️ Hyperparameter Tuning                 | Use `KerasTuner` or grid search to find optimal architecture/configuration |
+| 📂 Model Format Upgrade                  | Save in `.keras` format as recommended for modern serialization             |
+| 📊 TensorBoard Logging                   | Track model metrics, images, and learning rate schedules interactively      |
+| 📉 Model Compression                     | Apply quantization or pruning for deployment on edge devices                |
 
 ---
 
-## 📜 License & Acknowledgments
-- Educational and research purposes only
-- Dataset credited to original [Kaggle contributors](https://www.kaggle.com/datasets/andrewmvd/lung-and-colon-cancer-histopathological-images)
+## 📚 Dependencies
+
+```bash
+tensorflow==2.x
+opencv-python
+matplotlib
+scikit-learn
+pandas
+Pillow
+```
+
+---
+
+## 👨‍⚕️ Use Case
+
+- Histopathology image classification for research and diagnostics
+- Can be adapted for real-time medical decision support
+- Ideal starting point for pathology detection pipelines in healthcare ML
